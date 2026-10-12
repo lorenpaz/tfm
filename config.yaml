@@ -1,0 +1,91 @@
+# Configuración única del proyecto TFM (se lee con src/config.py).
+# Las rutas son relativas a la raíz del proyecto.
+
+zona_horaria: Europe/Madrid
+
+# Centro de Málaga: referencia para calcular la elevación solar (iluminación día/crepúsculo/noche)
+ubicacion:
+  lat: 36.7213
+  lon: -4.4214
+
+rutas:
+  datos: data/malaga
+  raw: data/malaga/raw
+  catalogo: data/malaga/da_camarasTrafico-4326.csv
+  festivos: data/malaga/calendario_festivos_malaga.csv
+  metadata: data/malaga/metadata
+  logs: data/malaga/logs
+  refresco: data/malaga/refresco
+  fases: data/malaga/fases            # una salida por fase de 02_* (parquet)
+  meteo_cache: data/malaga/weather_cache
+  anotacion: data/malaga/anotacion
+  dataset_yolo: data/malaga/yolo26_dataset
+  resultados: data/malaga/resultados
+  runs: runs
+
+captura:
+  camaras: [21560, 75098, 21564, 78681, 21603, 21545, 21556, 75095, 21563, 21547, 21541, 21616,
+            21568, 21577, 21595, 21582, 21598, 21573, 21554, 75024, 21618, 21580, 21587, 75093]
+  intervalo_punta_s: 30
+  intervalo_valle_s: 60
+  horas_punta:                       # hora local
+    - ["07:00", "10:00"]
+    - ["13:00", "16:00"]
+    - ["17:00", "20:00"]
+  timeout_s: 15
+
+refresco:
+  camaras_referencia: [21547, 21541, 21560, 21563, 21545]
+
+calidad:
+  min_ancho: 640
+  min_alto: 480
+  brillo_min_dia: 30          # solo se exige a imágenes de día (las nocturnas son oscuras por naturaleza)
+  brillo_max: 220
+  percentil_nitidez_min: 5    # umbral de nitidez = percentil global de la varianza del Laplaciano
+  max_fraccion_fallos: 0.30   # una cámara va a la lista negra si falla más de este % de sus imágenes de día
+  pesos_score:                # sobre métricas normalizadas (percentil 0-1 por métrica)
+    brillo: 0.35
+    nitidez: 0.65
+
+muestreo:
+  segundos_por_defecto: 30    # se usa si no hay medición de refresco
+  usar_refresco_medido: true  # usa la mediana del refresco medido en 00b (no tiene sentido muestrear más rápido)
+
+iluminacion:
+  elevacion_crepusculo: -6    # grados: sol entre -6 y 0 = crepúsculo civil; por debajo, noche
+
+meteo:
+  max_diff_minutos: 60
+  max_distancia_km: 40
+
+deteccion:
+  modelo: yolo26s.pt
+  conf: 0.25
+  imgsz: 640
+  min_personas_grupo: 3
+
+cvat:
+  version: v2.78.0
+  proyecto: "TFM Malaga - semaforos, peatones y vehiculos"
+  lote: lote_01
+  n_imagenes_lote: 300
+  max_por_camara: 20
+  segment_size: 50
+
+entrenamiento:
+  modelo: yolo26s.pt
+  epochs: 100
+  patience: 20
+  imgsz: 640
+  batch: 8
+  workers: 4
+  n_folds: 5
+  test_ratio: 0.15
+  semilla: 42
+
+evaluacion:
+  # Las duraciones de fase solo se calculan si el refresco medido y el hueco entre imágenes
+  # consecutivas permiten ver varias muestras por fase; si no, se usan fracciones de tiempo.
+  max_refresco_para_duraciones_s: 10
+  max_hueco_racha_s: 15
