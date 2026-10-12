@@ -1,0 +1,25 @@
+# Dependencias del proyecto TFM
+# Compatibilidad validada para Python 3.14.x
+#
+# GPU (NVIDIA): instalar antes PyTorch con CUDA para que ultralytics no instale la versión CPU:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+
+requests>=2.32.0
+beautifulsoup4>=4.12.3
+pandas>=2.3.0
+numpy>=2.2.0
+matplotlib>=3.10.0
+seaborn>=0.13.2
+opencv-python>=4.11.0.86
+ipykernel>=6.31.0
+tzdata>=2025.2
+pyarrow>=18.0.0       # salidas por fase en parquet (data/malaga/fases)
+pytest>=8.3.0
+
+# Detección: YOLO26 requiere ultralytics >= 8.4.0
+ultralytics>=8.4.0
+scikit-learn>=1.6.0
+pyyaml>=6.0.2
+
+# Anotación: la versión del SDK debe coincidir con la del servidor CVAT (cvat/docker-compose)
+cvat-sdk==2.78.0
