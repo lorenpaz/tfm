@@ -6,4 +6,8 @@ Autor: Lorenzo Jose de la Paz Suarez
 """
 
 def main():
-    
+    pass
+
+
+if __name__ == "__main__":
+    main()

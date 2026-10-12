@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Modelos preentrenados descargables (no versionar binarios reproducibles)
+*.pt
+
+# Salidas de entrenamiento/inferencia YOLO
+runs/
+
+# Datos capturados localmente (imagenes, logs, cache de API)
+data/malaga/raw/
+data/malaga/logs/
+data/malaga/weather_cache/
+data/malaga/metadata/
+data/malaga/yolo_dataset/
+data/malaga/yolo26_dataset/
+
+# Salidas por fase del preprocesamiento (derivadas de raw/, se regeneran con 02_*)
+data/malaga/fases/
+
+# Medición de refresco: se versionan los CSV, no las imágenes
+data/malaga/refresco/*/
+
+# Anotación CVAT: se versionan indice.csv y labels/ (trabajo humano), no las imágenes ni los zip exportados
+data/malaga/anotacion/*/images/
+data/malaga/anotacion/*/export/
+
+# Servidor CVAT clonado y credenciales locales
+cvat/cvat-server/
+cvat/.env
