@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Gestión del servidor CVAT local (Docker) para la anotación del TFM.
 
@@ -93,7 +93,7 @@ function Invoke-Compose {
 
 function Wait-CvatApi {
     Write-Host "Esperando a que la API de CVAT responda..."
-    for ($i = 0; $i -lt 60; $i++) {
+    for ($i = 0; $i -lt 180; $i++) {
         try {
             $about = Invoke-RestMethod -Uri "$CvatUrl/api/server/about" -TimeoutSec 5
             Write-Host "CVAT $($about.version) disponible en $CvatUrl"
@@ -103,7 +103,7 @@ function Wait-CvatApi {
             Start-Sleep -Seconds 5
         }
     }
-    throw "CVAT no respondió en 5 minutos. Revisa: .\cvat\cvat.ps1 logs"
+    throw "CVAT no respondió en 15 minutos (el primer arranque aplica las migraciones de la base de datos). Revisa: .\cvat\cvat.ps1 logs"
 }
 
 function New-Superuser {
