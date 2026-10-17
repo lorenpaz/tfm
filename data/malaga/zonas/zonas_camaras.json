@@ -1,0 +1,5 @@
+{
+  "descripcion": "Zonas por cámara dibujadas en CVAT (06_estado_vehiculos). Puntos normalizados (x, y) en 0-1.",
+  "tarea_cvat": 3,
+  "camaras": {}
+}
