@@ -83,6 +83,13 @@ cvat:
   n_imagenes_lote: 300
   max_por_camara: 20
   segment_size: 50
+  # Separación mínima entre dos imágenes de la misma cámara dentro de los lotes: a 6 s son casi
+  # idénticas (no aportan información y, repartidas entre train y val, inflan las métricas)
+  separacion_minima_min: 10
+  # Lote prioritario (03b): imágenes que compensan los grupos escasos, en un único job ordenado
+  lote_prioritario: lote_02_prioritario
+  n_imagenes_prioritario: 100
+  max_por_camara_prioritario: 5
 
 
 entrenamiento:
