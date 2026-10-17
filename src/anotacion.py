@@ -3,6 +3,9 @@ Lectura de las exportaciones de CVAT en formato YOLO y reasignación de clases.
 
 CVAT numera las clases según el orden de etiquetas del proyecto, que no tiene por qué
 coincidir con CLASS_NAMES. Las etiquetas se reasignan por NOMBRE.
+
+TFM - Máster en Inteligencia Artificial
+Autor: Lorenzo Jose de la Paz Suarez
 """
 
 from pathlib import Path

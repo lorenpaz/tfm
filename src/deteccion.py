@@ -3,13 +3,17 @@ Definiciones compartidas de detección: clases del dataset, mapeo COCO y color d
 
 Es la fuente única de las clases para la anotación en CVAT (03_anotacion_cvat) y el
 entrenamiento (04_training): el orden de CLASS_NAMES define el índice de clase YOLO.
+
+TFM - Máster en Inteligencia Artificial
+Autor: Lorenzo Jose de la Paz Suarez
 """
+
 
 import cv2
 
 # Clases del detector (orden = índice de clase YOLO)
 CLASS_NAMES = [
-    "person",
+    "pedestrian",
     "car",
     "bus",
     "truck",
@@ -28,7 +32,7 @@ PEDESTRIAN_LIGHT_CLASSES = ["pedestrian_light_red", "pedestrian_light_green"]
 
 # Clases COCO (pesos preentrenados de YOLO26) que se reutilizan
 COCO_TO_CLASS = {
-    0: "person",
+    0: "pedestrian",       # clase COCO "person"
     2: "car",
     3: "motorcycle",
     5: "bus",
@@ -107,11 +111,11 @@ def is_pedestrian_light(bbox, img_shape):
 VEHICLE_CLASSES = ["car", "bus", "truck", "motorcycle"]
 
 
-def frame_counts(boxes, img_shape, min_group=3):
+def frame_counts(boxes, img_shape):
     """Conteos por fotograma a partir de predict_boxes().
 
     Devuelve n_<clase> para objetos y semáforos (los de color con la heurística peatonal
-    aplicada), n_vehiculos y pedestrian_group (al menos `min_group` personas).
+    aplicada) y n_vehiculos.
     """
     counts = {f"n_{name}": 0 for name in CLASS_NAMES}
     for name, bbox in boxes:
@@ -122,5 +126,4 @@ def frame_counts(boxes, img_shape, min_group=3):
         counts[f"n_{name}"] += 1
 
     counts["n_vehiculos"] = sum(counts[f"n_{c}"] for c in VEHICLE_CLASSES)
-    counts["pedestrian_group"] = counts["n_person"] >= min_group
     return counts

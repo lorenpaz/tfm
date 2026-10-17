@@ -1,4 +1,9 @@
-"""Métricas de calidad visual, filtro de imágenes y lista negra de cámaras."""
+"""
+Métricas de calidad visual, filtro de imágenes y lista negra de cámaras.
+
+TFM - Máster en Inteligencia Artificial
+Autor: Lorenzo Jose de la Paz Suarez
+"""
 
 from pathlib import Path
 
@@ -74,7 +79,6 @@ def add_quality(df, cfg):
 
 def camera_blacklist(df, max_fail_fraction):
     """Cámaras cuya fracción de imágenes de día no válidas supera el umbral.
-
     Una sola imagen defectuosa (o nocturna) ya no descarta la cámara entera.
     """
     day = df[df["illumination"].eq("dia")] if "illumination" in df.columns else df

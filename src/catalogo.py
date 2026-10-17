@@ -1,4 +1,9 @@
-"""Catálogo municipal de cámaras de tráfico (da_camarasTrafico-4326.csv)."""
+"""
+Catálogo municipal de cámaras de tráfico (da_camarasTrafico-4326.csv).
+
+TFM - Máster en Inteligencia Artificial
+Autor: Lorenzo Jose de la Paz Suarez
+"""
 
 import re
 
