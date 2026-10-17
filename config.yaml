@@ -1,4 +1,4 @@
-# Configuración única del proyecto TFM (se lee con src/config.py).
+# Configuración global del proyecto TFM
 # Las rutas son relativas a la raíz del proyecto.
 
 zona_horaria: Europe/Madrid
@@ -24,17 +24,29 @@ rutas:
   runs: runs
 
 captura:
+  # camaras seleccionadas para el muestreo continuo
   camaras: [21560, 75098, 21564, 78681, 21603, 21545, 21556, 75095, 21563, 21547, 21541, 21616,
             21568, 21577, 21595, 21582, 21598, 21573, 21554, 75024, 21618, 21580, 21587, 75093]
-  intervalo_punta_s: 30
+  intervalo_punta_s: 30 #
   intervalo_valle_s: 60
   horas_punta:                       # hora local
     - ["07:00", "10:00"]
     - ["13:00", "16:00"]
     - ["17:00", "20:00"]
   timeout_s: 15
+  # Cámaras de referencia a la frecuencia de refresco medida (6 s, ver 00b) para poder medir
+  # duraciones de fase semafórica (OE-4). Solo en hora punta para limitar el volumen de espacio (~3 GB/día).
+  alta_frecuencia:
+    # utilizadas para medir el refresco
+    camaras: [21547, 21541, 21560, 21563, 21545]
+    intervalo_s: 6
+    solo_hora_punta: true
+  # No guarda la imagen si el servidor no ha publicado una nueva desde la captura anterior
+  # (mismo Last-Modified); se registra como SIN_CAMBIOS
+  descartar_sin_cambios: true
 
 refresco:
+  # utilizadas para medir el refresco
   camaras_referencia: [21547, 21541, 21560, 21563, 21545]
 
 calidad:
@@ -72,6 +84,7 @@ cvat:
   n_imagenes_lote: 300
   max_por_camara: 20
   segment_size: 50
+
 
 entrenamiento:
   modelo: yolo26s.pt

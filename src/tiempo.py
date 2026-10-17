@@ -5,7 +5,8 @@ Convención del proyecto:
 - Nombres de fichero y columna `timestamp`: UTC (datetime naive).
 - Columna `timestamp_local`: hora de Madrid (datetime naive), usada para franjas y tipo de día.
 
-Solo usa la librería estándar.
+TFM - Máster en Inteligencia Artificial
+Autor: Lorenzo Jose de la Paz Suarez
 """
 
 import csv
@@ -20,16 +21,10 @@ LOCAL_TZ = ZoneInfo("Europe/Madrid")
 FILENAME_FORMAT = "%Y%m%dT%H%M%SZ"
 
 _UTC_NAME = re.compile(r"(20\d{6})T(\d{6})Z")
-_LEGACY_NAME = re.compile(r"(20\d{6})_(\d{6})")
 
 
 def parse_timestamp_from_name(filename):
-    """Marca de tiempo UTC (naive) codificada en el nombre del fichero, o None.
-
-    - Formato actual: 20260825T144834Z.jpg -> UTC.
-    - Formato antiguo (hora local de Madrid): 20260825_164834.jpg -> se convierte a UTC.
-      Devuelve None si la hora local es ambigua o inexistente (cambio de hora).
-    """
+    """Marca de tiempo UTC (naive) codificada en el nombre del fichero (20260825T144834Z.jpg), o None."""
     stem = Path(filename).stem
 
     match = _UTC_NAME.search(stem)
@@ -39,28 +34,7 @@ def parse_timestamp_from_name(filename):
         except ValueError:
             return None
 
-    match = _LEGACY_NAME.search(stem)
-    if match:
-        try:
-            naive = datetime.strptime(match.group(1) + match.group(2), "%Y%m%d%H%M%S")
-        except ValueError:
-            return None
-        return local_to_utc(naive)
-
     return None
-
-
-def local_to_utc(naive_local):
-    """Hora local de Madrid (naive) -> UTC (naive). None si es ambigua o inexistente."""
-    first = naive_local.replace(tzinfo=LOCAL_TZ, fold=0)
-    second = naive_local.replace(tzinfo=LOCAL_TZ, fold=1)
-    if first.utcoffset() != second.utcoffset():
-        return None
-    utc = first.astimezone(timezone.utc).replace(tzinfo=None)
-    # Hora inexistente (salto de marzo): no sobrevive al ida y vuelta
-    if to_local(utc) != naive_local:
-        return None
-    return utc
 
 
 def to_local(ts_utc):

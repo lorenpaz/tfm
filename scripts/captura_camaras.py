@@ -2,7 +2,15 @@
 Servicio de captura periódica de las cámaras de tráfico de Málaga.
 
 Se ejecuta como servicio de Windows (NSSM, "CamarasMalaga"). Las cámaras, intervalos y
-horas punta se leen de config.yaml (sección `captura`).
+horas punta se leen de config.yaml (sección `captura`):
+
+- Cámaras normales: cada `intervalo_punta_s` en hora punta y `intervalo_valle_s` el resto.
+- Cámaras de alta frecuencia (`alta_frecuencia`): cada `intervalo_s` (6 s, el refresco medido
+  de las cámaras), solo en hora punta si `solo_hora_punta` es true. Permite medir duraciones
+  de fase semafórica.
+
+Cada cámara se planifica por separado y las descargas pendientes se hacen en paralelo, para
+que las cámaras de alta frecuencia no esperen a las demás.
 
 Los nombres de fichero y metadatos se guardan en UTC (sufijo Z) para evitar ambigüedades
 en los cambios de hora. La hora local solo se usa para decidir las horas punta.
@@ -10,8 +18,10 @@ en los cambios de hora. La hora local solo se usa para decidir las horas punta.
 
 import logging
 import sys
+import threading
 import time
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone, time as dt_time
 from email.utils import parsedate_to_datetime
 from pathlib import Path
@@ -48,6 +58,14 @@ METADATA_DIR.mkdir(parents=True, exist_ok=True)
 CAMERAS = {str(c) for c in CFG["camaras"]}
 REQUEST_TIMEOUT = CFG["timeout_s"]
 
+HIGH_FREQ = CFG.get("alta_frecuencia", {})
+HIGH_FREQ_CAMERAS = {str(c) for c in HIGH_FREQ.get("camaras", [])}
+HIGH_FREQ_INTERVAL = HIGH_FREQ.get("intervalo_s", 6)
+HIGH_FREQ_ONLY_PEAK = HIGH_FREQ.get("solo_hora_punta", True)
+DISCARD_UNCHANGED = CFG.get("descartar_sin_cambios", True)
+
+SUMMARY_EVERY_S = 60              # una línea de resumen por minuto en el log
+
 # =====================================================
 # LOGGING
 # =====================================================
@@ -68,19 +86,6 @@ logger = logging.getLogger(__name__)
 # SESIÓN HTTP
 # =====================================================
 
-session = requests.Session()
-
-retries = Retry(
-    total=3,
-    backoff_factor=1,
-    status_forcelist=[429, 500, 502, 503, 504]
-)
-
-session.mount(
-    "https://",
-    HTTPAdapter(max_retries=retries)
-)
-
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
@@ -90,6 +95,31 @@ HEADERS = {
     "Referer": "https://malaga.eu",
     "Accept-Language": "es-ES,es;q=0.9"
 }
+
+# Una sesión por hilo: requests.Session no garantiza ser segura entre hilos
+_local = threading.local()
+
+
+def get_session():
+
+    if not hasattr(_local, "session"):
+
+        session = requests.Session()
+
+        retries = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504]
+        )
+
+        session.mount(
+            "https://",
+            HTTPAdapter(max_retries=retries)
+        )
+
+        _local.session = session
+
+    return _local.session
 
 
 # =====================================================
@@ -111,8 +141,15 @@ def is_peak_hour():
     return any(start <= now < end for start, end in PEAK_RANGES)
 
 
-def get_capture_interval():
-    return CFG["intervalo_punta_s"] if is_peak_hour() else CFG["intervalo_valle_s"]
+def get_capture_interval(camera_id):
+    """Segundos hasta la siguiente captura de una cámara."""
+
+    peak = is_peak_hour()
+
+    if camera_id in HIGH_FREQ_CAMERAS and (peak or not HIGH_FREQ_ONLY_PEAK):
+        return HIGH_FREQ_INTERVAL
+
+    return CFG["intervalo_punta_s"] if peak else CFG["intervalo_valle_s"]
 
 
 # =====================================================
@@ -133,9 +170,9 @@ def parse_last_modified(response):
         return None
 
 
-def download_image(image_url, output_file):
+def download_image(image_url):
 
-    response = session.get(
+    response = get_session().get(
         image_url,
         headers=HEADERS,
         timeout=REQUEST_TIMEOUT
@@ -143,16 +180,14 @@ def download_image(image_url, output_file):
 
     response.raise_for_status()
 
-    output_file.write_bytes(response.content)
-
-    return parse_last_modified(response)
+    return response.content, parse_last_modified(response)
 
 
 # =====================================================
 # CAPTURA
 # =====================================================
 
-def capture_camera(camera_row):
+def capture_camera(camera_row, previous_last_modified):
 
     camera_id = camera_row["ID"]
     camera_name = camera_row["NOMBRE"]
@@ -161,30 +196,37 @@ def capture_camera(camera_row):
     now_utc = datetime.now(timezone.utc)
     capture_time = now_utc.strftime(ISO_FORMAT)
 
-    camera_dir = RAW_DIR / camera_id
-    camera_dir.mkdir(exist_ok=True)
-
-    image_file = camera_dir / f"{now_utc.strftime(FILENAME_FORMAT)}.jpg"
+    result = {
+        "camera_id": camera_id,
+        "camera_name": camera_name,
+        "capture_time": capture_time,
+        "server_last_modified": None,
+        "image_file": None,
+        "status": None
+    }
 
     try:
 
-        server_last_modified = download_image(
-            image_url,
-            image_file
-        )
+        content, server_last_modified = download_image(image_url)
+        result["server_last_modified"] = server_last_modified
 
-        logger.info(
-            f"OK - Cámara {camera_id} - {camera_name}"
-        )
+        # La cámara aún no ha publicado una imagen nueva: no se guarda un duplicado
+        if (
+            DISCARD_UNCHANGED
+            and server_last_modified is not None
+            and server_last_modified == previous_last_modified
+        ):
+            result["status"] = "SIN_CAMBIOS"
+            return result
 
-        return {
-            "camera_id": camera_id,
-            "camera_name": camera_name,
-            "capture_time": capture_time,
-            "server_last_modified": server_last_modified,
-            "image_file": image_file.relative_to(BASE_DIR).as_posix(),
-            "status": "OK"
-        }
+        camera_dir = RAW_DIR / camera_id
+        camera_dir.mkdir(exist_ok=True)
+
+        image_file = camera_dir / f"{now_utc.strftime(FILENAME_FORMAT)}.jpg"
+        image_file.write_bytes(content)
+
+        result["image_file"] = image_file.relative_to(BASE_DIR).as_posix()
+        result["status"] = "OK"
 
     except Exception as exc:
 
@@ -192,14 +234,9 @@ def capture_camera(camera_row):
             f"ERROR - Cámara {camera_id} - {exc}"
         )
 
-        return {
-            "camera_id": camera_id,
-            "camera_name": camera_name,
-            "capture_time": capture_time,
-            "server_last_modified": None,
-            "image_file": None,
-            "status": str(exc)
-        }
+        result["status"] = str(exc)
+
+    return result
 
 
 # =====================================================
@@ -243,7 +280,9 @@ def load_cameras():
     df = df[df["ID"].isin(CAMERAS)]
 
     logger.info(
-        f"Cámaras seleccionadas: {len(df)}"
+        f"Cámaras seleccionadas: {len(df)} "
+        f"(alta frecuencia: {sorted(HIGH_FREQ_CAMERAS & set(df['ID']))} cada {HIGH_FREQ_INTERVAL} s"
+        f"{' en hora punta' if HIGH_FREQ_ONLY_PEAK else ''})"
     )
 
     return df
@@ -257,36 +296,53 @@ def main():
 
     logger.info("Servicio iniciado")
 
-    cameras_df = load_cameras()
+    cameras = {row["ID"]: row for _, row in load_cameras().iterrows()}
 
-    while True:
+    # Próxima captura (reloj monótono), descarga en curso y último Last-Modified de cada cámara
+    next_due = {camera_id: 0.0 for camera_id in cameras}
+    in_flight = {}
+    last_modified = {}
 
-        cycle_start = time.time()
+    summary = {"OK": 0, "SIN_CAMBIOS": 0, "ERROR": 0}
+    last_summary = time.monotonic()
 
-        results = []
+    with ThreadPoolExecutor(max_workers=12) as pool:
 
-        logger.info("Inicio ciclo de captura")
+        while True:
 
-        for _, row in cameras_df.iterrows():
-
-            result = capture_camera(row)
-
-            if result:
+            # 1) Recoger las descargas terminadas. Una descarga lenta (algunas tardan varios
+            #    segundos) solo retrasa a su propia cámara, no a las demás.
+            results = []
+            for camera_id in [c for c, future in in_flight.items() if future.done()]:
+                result = in_flight.pop(camera_id).result()
+                if result["server_last_modified"]:
+                    last_modified[camera_id] = result["server_last_modified"]
+                status = result["status"] if result["status"] in ("OK", "SIN_CAMBIOS") else "ERROR"
+                summary[status] += 1
                 results.append(result)
 
-        save_metadata(results)
+            save_metadata(results)
 
-        interval = get_capture_interval()
+            # 2) Lanzar las capturas pendientes (sin solapar dos de la misma cámara). La siguiente
+            #    se programa desde el inicio de esta para mantener la cadencia.
+            now = time.monotonic()
+            for camera_id, due_time in next_due.items():
+                if due_time <= now and camera_id not in in_flight:
+                    next_due[camera_id] = now + get_capture_interval(camera_id)
+                    in_flight[camera_id] = pool.submit(
+                        capture_camera, cameras[camera_id], last_modified.get(camera_id)
+                    )
 
-        elapsed = time.time() - cycle_start
+            if time.monotonic() - last_summary >= SUMMARY_EVERY_S:
+                logger.info(
+                    f"Último minuto: {summary['OK']} capturas, {summary['SIN_CAMBIOS']} sin cambios, "
+                    f"{summary['ERROR']} errores | hora punta: {is_peak_hour()}"
+                )
+                summary = dict.fromkeys(summary, 0)
+                last_summary = time.monotonic()
 
-        sleep_time = max(1, interval - elapsed)
-
-        logger.info(
-            f"Fin ciclo. Próxima captura en {sleep_time:.1f} segundos"
-        )
-
-        time.sleep(sleep_time)
+            # Revisa al menos cada 0,5 s si han terminado descargas
+            time.sleep(max(0.05, min(0.5, min(next_due.values()) - time.monotonic())))
 
 
 if __name__ == "__main__":
