@@ -47,7 +47,7 @@ Los cambios de `config.yaml` → `captura` y de este script solo se aplican tras
 
 ## medir_refresco.py
 
-**Objetivo:** mide **cada cuánto publica cada cámara una imagen nueva**. Consulta varias cámaras en paralelo cada `--poll` segundos durante `--duracion` minutos y registra en cada consulta la cabecera `Last-Modified` y el SHA-1 de la imagen. También se usa desde `00b_Frecuencia_Refresco.ipynb`, que importa sus funciones.
+**Objetivo:** mide **cada cuánto publica cada cámara una imagen nueva**. Consulta varias cámaras en paralelo cada `--poll` segundos durante `--duracion` minutos y registra en cada consulta la cabecera `Last-Modified` y el SHA-1 de la imagen. También se usa desde `00b_medicion_refresco_camaras.ipynb`, que importa sus funciones.
 
 **Salidas** (en `data/malaga/refresco/`):
 - `refresco_<UTC>.csv`: una fila por consulta.

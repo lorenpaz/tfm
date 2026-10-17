@@ -7,8 +7,9 @@ Un lote es una carpeta data/malaga/anotacion/<lote>/ con:
     cvat_task.json   tarea y proyecto de CVAT del lote
     labels/          etiquetas YOLO revisadas (se crean al exportar)
 
-Lo usan 03_anotacion_cvat (lotes estratificados) y 03b_lote_prioritario_cvat (lotes que
-compensan los desequilibrios de clases).
+Lo usan 03a_anotacion_lote_estratificado (lotes estratificados), 03b_anotacion_lote_prioritario (lotes que
+compensan los desequilibrios de clases) y 03c_anotacion_zonas_estado_vehiculos (zonas por cámara y lote de
+validación del estado de los vehículos).
 """
 
 import json
@@ -83,7 +84,7 @@ def images_in_lotes(exclude=None):
 
 
 def car_state_attribute():
-    """Atributo `estado` de la etiqueta car (para validar la clasificación de 06_estado_vehiculos)."""
+    """Atributo `estado` de la etiqueta car (para validar la clasificación de 06_clasificacion_estado_vehiculos)."""
     from cvat_sdk import models
     from estado_vehiculos import ESTADOS
 
@@ -263,7 +264,7 @@ def export_lote(client, task, lote):
 def export_car_states(client, task, lote):
     """Coches con `estado` distinto de desconocido marcados en CVAT -> anotacion/<lote>/estado_vehiculos.csv.
 
-    Sirve como referencia manual para validar la clasificación automática de 06_estado_vehiculos.
+    Sirve como referencia manual para validar la clasificación automática de 06_clasificacion_estado_vehiculos.
     Cajas en coordenadas normalizadas (0-1) respecto al tamaño de la imagen.
     """
     labels = {label.id: label for label in client.projects.retrieve(task.project_id).get_labels()}
@@ -344,7 +345,7 @@ def export_zones(client, task, json_path):
     json_path = Path(json_path)
     json_path.parent.mkdir(parents=True, exist_ok=True)
     json_path.write_text(json.dumps({
-        "descripcion": "Zonas por cámara dibujadas en CVAT (06_estado_vehiculos). Puntos normalizados (x, y) en 0-1.",
+        "descripcion": "Zonas por cámara dibujadas en CVAT (03c_anotacion_zonas_estado_vehiculos). Puntos normalizados (x, y) en 0-1.",
         "tarea_cvat": task.id,
         "camaras": zones,
     }, indent=2, ensure_ascii=False), encoding="utf-8")

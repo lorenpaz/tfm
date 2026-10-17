@@ -2,9 +2,9 @@
 Salidas por fase del preprocesamiento y utilidades comunes del pipeline.
 
 Cada notebook 02_* escribe SOLO su propia salida en data/malaga/fases/:
-    frames.parquet      02_preprocess_labelled_basic     (fotogramas válidos + contexto temporal)
-    weather.parquet     02_preprocess_labelled_weather   (etiqueta meteorológica + observación AEMET)
-    detections.parquet  02_preprocess_labelled_detection (conteos y estados de semáforo por fotograma)
+    frames.parquet      02a_preproceso_calidad_contexto     (fotogramas válidos + contexto temporal)
+    weather.parquet     02b_preproceso_meteorologia_aemet   (etiqueta meteorológica + observación AEMET)
+    detections.parquet  02c_preproceso_deteccion_yolo26     (conteos y estados de semáforo por fotograma)
 
 Las fases se unen por (camera, image) con load_frames(), de modo que el orden de ejecución
 de weather y detection es indiferente y ninguna fase puede pisar el trabajo de otra.
@@ -70,7 +70,7 @@ def service_cameras():
 def only_service_cameras(df):
     """Filtra a las cámaras del servicio de captura.
 
-    Las demás solo tienen 1-2 imágenes (instantáneas de 00_Descarga): sus indicadores no son
+    Las demás solo tienen 1-2 imágenes (instantáneas de 00a_captura_instantanea_catalogo): sus indicadores no son
     representativos y añadirían ruido a la evaluación y a los lotes de anotación.
     """
     return df[df["camera"].astype(str).isin(service_cameras())]

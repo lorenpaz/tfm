@@ -6,7 +6,7 @@ clasificación HSV, casi todos los semáforos salen en ámbar. Anotar al azar re
 desequilibrio. Aquí se eligen las imágenes que más aportan a los GRUPOS escasos, con una
 selección voraz: cada imagen elegida reduce el peso de los grupos que ya cubre.
 
-Grupos (a partir de los conteos por fotograma de 02_preprocess_labelled_detection):
+Grupos (a partir de los conteos por fotograma de 02c_preproceso_deteccion_yolo26):
 - Objetos: pedestrian, car, bus, truck, motorcycle.
 - semaforo: cualquier semáforo vehicular, sea del color que sea. El color pre-anotado no es
   fiable, así que lo valioso es que la imagen tenga semáforos que el anotador clasifique.

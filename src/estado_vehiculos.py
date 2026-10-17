@@ -2,7 +2,7 @@
 Estado de los vehículos junto al semáforo: esperando, aparcado o circulando.
 
 En una sola imagen no se distingue un coche aparcado de uno que espera en rojo. Se combinan
-dos criterios (decisión documentada en notebooks/README.md, sección 06):
+dos criterios (decisión documentada en notebooks/README.md, secciones 03c y 06):
 
 1. Zonas por cámara, dibujadas una vez en CVAT:
    - zona_espera: carril de espera antes de la línea de detención.
@@ -20,7 +20,7 @@ Regla de clasificación de cada caja:
 - esperando:  en zona_espera, detenido (sin moverse respecto al fotograma anterior) y no aparcado.
 - circulando: el resto.
 
-Test: localizados en tests/test_estado_vehiculos.py-
+Test: localizados en tests/test_estado_vehiculos.py.
 
 TFM - Máster en Inteligencia Artificial
 Autor: Lorenzo Jose de la Paz Suarez
@@ -30,7 +30,46 @@ import json
 
 from pathlib import Path
 
+import pandas as pd
+
+from calidad import IMAGE_EXTENSIONS
+from config import path, relative
+from tiempo import parse_timestamp_from_name
+
 ESTADOS = ["desconocido", "esperando", "aparcado", "circulando"]
+
+
+def list_reference_images(cameras):
+    """Imágenes de las cámaras de referencia en raw/ y en las mediciones de refresco/.
+
+    Devuelve un DataFrame (camera, image, path, timestamp) ordenado por cámara y tiempo, sin
+    duplicados por instante (una misma imagen puede estar en raw/ y en refresco/).
+    """
+    sources = []
+    for cam in cameras:
+        dirs = [path("raw") / cam] + sorted(path("refresco").glob(f"*/{cam}"))
+        for d in dirs:
+            for p in d.glob("*"):
+                ts = parse_timestamp_from_name(p.name) if p.suffix.lower() in IMAGE_EXTENSIONS else None
+                if ts is not None:
+                    sources.append({"camera": cam, "image": p.name, "path": relative(p), "timestamp": ts})
+    columns = ["camera", "image", "path", "timestamp"]
+    if not sources:
+        return pd.DataFrame(columns=columns)
+    return (pd.DataFrame(sources, columns=columns).drop_duplicates(["camera", "timestamp"])
+            .sort_values(["camera", "timestamp"]).reset_index(drop=True))
+
+
+def continuous_sequences(images_df, max_gap_s=15):
+    """Filas de `images_df` que forman parte de un tramo continuo (vecina a <= max_gap_s).
+
+    Una imagen está en secuencia si la anterior o la siguiente de su cámara dista como mucho
+    max_gap_s. Las capturas a 30-60 s quedan fuera: no sirven para seguir vehículos.
+    """
+    df = images_df.sort_values(["camera", "timestamp"])
+    gap = df.groupby("camera")["timestamp"].diff().dt.total_seconds()
+    next_gap = df.groupby("camera")["timestamp"].diff(-1).dt.total_seconds().abs()
+    return df[(gap <= max_gap_s) | (next_gap <= max_gap_s)].reset_index(drop=True)
 
 
 def load_zones(json_path):
