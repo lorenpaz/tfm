@@ -120,15 +120,30 @@ def sample_every(df, seconds):
     return pd.concat([with_ts[keep], df[df["timestamp"].isna()]]).reset_index(drop=True)
 
 
-def stratified_selection(df, strata, n, max_per_camera, seed):
+def far_enough(timestamp, chosen_timestamps, min_gap_s):
+    """True si `timestamp` dista al menos `min_gap_s` de todos los ya elegidos de su cámara."""
+    return all(abs((timestamp - t).total_seconds()) >= min_gap_s for t in chosen_timestamps)
+
+
+def stratified_selection(df, strata, n, max_per_camera, seed, min_gap_s=0):
     """Selección en round-robin entre estratos con un máximo por cámara.
 
     Toma primero una imagen de cada estrato, luego la segunda de cada estrato, etc., de forma
     que la muestra cubre el máximo de combinaciones (cámara, franja, tipo de día...) posible.
+    Dos imágenes de la misma cámara deben distar al menos `min_gap_s` segundos: con capturas
+    cada 6 s, las consecutivas son casi idénticas y no aportan información nueva.
     """
     shuffled = df.sample(frac=1, random_state=seed)
     shuffled = shuffled.assign(_ronda=shuffled.groupby(strata).cumcount())
     shuffled = shuffled.sort_values("_ronda", kind="stable")
-    shuffled = shuffled.assign(_n_camara=shuffled.groupby("camera").cumcount())
-    selected = shuffled[shuffled["_n_camara"] < max_per_camera].head(n)
-    return selected.drop(columns=["_ronda", "_n_camara"])
+
+    chosen, by_camera = [], {}
+    for idx, camera, ts in zip(shuffled.index, shuffled["camera"], shuffled["timestamp"]):
+        taken = by_camera.setdefault(camera, [])
+        if len(taken) >= max_per_camera or (min_gap_s and not far_enough(ts, taken, min_gap_s)):
+            continue
+        taken.append(ts)
+        chosen.append(idx)
+        if len(chosen) == n:
+            break
+    return shuffled.loc[chosen].drop(columns=["_ronda"])

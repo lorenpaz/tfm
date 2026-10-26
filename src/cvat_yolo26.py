@@ -2,20 +2,14 @@
 Función de auto-anotación de CVAT basada en YOLO26 (pesos COCO).
 
 Genera PRE-anotaciones (cajas) que después se revisan y corrigen a mano en CVAT:
-- person / car / bus / truck / motorcycle: directamente de las clases COCO.
+- pedestrian (COCO "person") / car / bus / truck / motorcycle: directamente de las clases COCO.
 - semáforos: la clase COCO "traffic light" se etiqueta por caja según su color HSV
   (traffic_light_red/yellow/green) o traffic_light_unknown si no se distingue.
   Los semáforos peatonales no se distinguen automáticamente: el anotador cambia la
   etiqueta a pedestrian_light_* durante la revisión.
 
-Uso desde Python:
-    import cvat_sdk.auto_annotation as cvataa
-    from cvat_yolo26 import Yolo26PreAnnotator
-
-    cvataa.annotate_task(client, task_id, Yolo26PreAnnotator(), clear_existing=True)
-
-Uso desde la CLI de CVAT:
-    cvat-cli task auto-annotate <task_id> --function-module cvat_yolo26 -p weights=str:yolo26s.pt
+TFM - Máster en Inteligencia Artificial
+Autor: Lorenzo Jose de la Paz Suarez
 """
 
 import numpy as np
