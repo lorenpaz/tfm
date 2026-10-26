@@ -75,3 +75,14 @@ def test_classify_state():
     assert classify_state("zona_espera", False, 0) == "circulando"
     assert classify_state(None, True, 30) == "circulando"
 
+
+def test_continuous_sequences_keeps_only_close_images():
+    import pandas as pd
+    from estado_vehiculos import continuous_sequences
+
+    ts = [T0, T0 + timedelta(seconds=6), T0 + timedelta(seconds=12), T0 + timedelta(seconds=72)]
+    df = pd.DataFrame({"camera": ["A"] * 4 + ["B"], "image": list("abcde"),
+                       "timestamp": ts + [T0 + timedelta(seconds=3)]})
+    seq = continuous_sequences(df, max_gap_s=15)
+    # La imagen a 60 s de la anterior y la única de la cámara B quedan fuera
+    assert seq["image"].tolist() == ["a", "b", "c"]

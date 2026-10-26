@@ -1,5 +1,5 @@
 {
-  "descripcion": "Zonas por cámara dibujadas en CVAT (06_estado_vehiculos). Puntos normalizados (x, y) en 0-1.",
+  "descripcion": "Zonas por cámara dibujadas en CVAT (03c_anotacion_zonas_estado_vehiculos). Puntos normalizados (x, y) en 0-1.",
   "tarea_cvat": 3,
   "camaras": {}
 }

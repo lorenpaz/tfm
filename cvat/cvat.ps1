@@ -13,7 +13,7 @@
 
     Requisitos: Docker Desktop (backend WSL2) en ejecución y git.
     La versión de CVAT debe coincidir con cvat-sdk de requirements.txt.
-    Las credenciales se guardan en cvat\.env (excluido de git) y las lee 03_anotacion_cvat.ipynb.
+    Las credenciales se guardan en cvat\.env (excluido de git) y las lee 03a_anotacion_lote_estratificado.ipynb.
     Interfaz web: http://localhost:8080
 #>
 param(

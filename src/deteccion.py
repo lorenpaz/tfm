@@ -1,8 +1,8 @@
 """
 Definiciones compartidas de detección: clases del dataset, mapeo COCO y color de semáforos.
 
-Es la fuente única de las clases para la anotación en CVAT (03_anotacion_cvat) y el
-entrenamiento (04_training): el orden de CLASS_NAMES define el índice de clase YOLO.
+Es la fuente única de las clases para la anotación en CVAT (03a_anotacion_lote_estratificado) y el
+entrenamiento (04_entrenamiento_yolo26): el orden de CLASS_NAMES define el índice de clase YOLO.
 
 TFM - Máster en Inteligencia Artificial
 Autor: Lorenzo Jose de la Paz Suarez
@@ -101,7 +101,7 @@ def predict_boxes(model, img_bgr, conf=0.25, imgsz=640, device=None):
 def is_pedestrian_light(bbox, img_shape):
     """Heurística: semáforo peatonal = caja pequeña en la mitad inferior de la imagen.
 
-    Solo se usa para los indicadores de 02_detection; en CVAT el anotador decide el tipo.
+    Solo se usa para los indicadores de 02c_preproceso_deteccion_yolo26; en CVAT el anotador decide el tipo.
     """
     x1, y1, x2, y2 = bbox
     h, w = img_shape[:2]

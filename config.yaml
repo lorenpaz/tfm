@@ -92,7 +92,7 @@ cvat:
   max_por_camara_prioritario: 5
 
 estado_vehiculos:
-  # Distinguir coches aparcados de los que esperan al semáforo (06_estado_vehiculos):
+  # Distinguir coches aparcados de los que esperan al semáforo (06_clasificacion_estado_vehiculos):
   # 1) zonas por cámara dibujadas en CVAT (zona_espera / zona_aparcamiento)
   # 2) persistencia temporal: un vehículo inmóvil más de `tiempo_aparcado_s` está aparcado
   camaras: [21547, 21541, 21560, 21563, 21545]

@@ -1,6 +1,6 @@
 # CVAT (servidor de anotación local)
 
-[CVAT](https://github.com/cvat-ai/cvat) es la herramienta con la que se **revisan y corrigen a mano** las cajas pre-anotadas por YOLO26 antes de entrenar. Es lo que evita el entrenamiento circular: entrenar con etiquetas generadas por el propio detector. Se ejecuta en local con Docker y se usa desde [`notebooks/03_anotacion_cvat.ipynb`](../notebooks/README.md#03_anotacion_cvat).
+[CVAT](https://github.com/cvat-ai/cvat) es la herramienta con la que se **revisan y corrigen a mano** las cajas pre-anotadas por YOLO26 antes de entrenar. Es lo que evita el entrenamiento circular: entrenar con etiquetas generadas por el propio detector. Se ejecuta en local con Docker y se usa desde [`notebooks/03a_anotacion_lote_estratificado.ipynb`](../notebooks/README.md#03a_anotacion_lote_estratificado).
 
 ## Acceso y versionado
 - **Interfaz web:** http://localhost:8080
@@ -13,7 +13,7 @@
 |---|---|---|
 | `cvat.ps1` | Sí | Script de gestión del servidor (ver abajo). |
 | `cvat-server/` | No | Repositorio oficial de CVAT, clonado en la etiqueta `v2.78.0`. Contiene el `docker-compose.yml` que levanta los contenedores. Lo crea `cvat.ps1 instalar`. |
-| `.env` | No | Credenciales generadas al instalar: `CVAT_URL`, `CVAT_USER`, `CVAT_EMAIL` y `CVAT_PASSWORD` (aleatoria, 20 caracteres). La lee `03_anotacion_cvat`. |
+| `.env` | No | Credenciales generadas al instalar: `CVAT_URL`, `CVAT_USER`, `CVAT_EMAIL` y `CVAT_PASSWORD` (aleatoria, 20 caracteres). La lee `03a_anotacion_lote_estratificado`. |
 
 ## Ejecutable Windows PowerShell
 
@@ -44,12 +44,12 @@
 
 ## Uso en el TFM
 
-1. `03_anotacion_cvat` crea el proyecto **"TFM Malaga - semaforos, peatones y vehiculos"**, con las 11 etiquetas de `src/deteccion.py`, y una tarea por lote dividida en jobs de 50 imágenes.
+1. `03a_anotacion_lote_estratificado` crea el proyecto **"TFM Malaga - semaforos, peatones y vehiculos"**, con las 11 etiquetas de `src/deteccion.py`, y una tarea por lote dividida en jobs de 50 imágenes.
 2. La pre-anotación YOLO26 sube las cajas a la tarea con `source = auto`.
 3. **Revisión humana** en la web: corregir cajas y colores, cambiar los semáforos peatonales a `pedestrian_light_*` y marcar cada job como terminado (*Menu → Finish the job*). Los criterios están en la sección 6 del notebook.
-4. El notebook exporta en formato *Ultralytics YOLO Detection 1.0* **los jobs terminados**; sus imágenes ya sirven para `04_training`. Se puede exportar varias veces, a medida que se terminan jobs.
+4. El notebook exporta en formato *Ultralytics YOLO Detection 1.0* **los jobs terminados**; sus imágenes ya sirven para `04_entrenamiento_yolo26`. Se puede exportar varias veces, a medida que se terminan jobs.
 
-`03b_lote_prioritario_cvat` crea además lotes de **un único job ordenado por prioridad**, con las imágenes que más compensan las clases escasas.
+`03b_anotacion_lote_prioritario` crea además lotes de **un único job ordenado por prioridad**, con las imágenes que más compensan las clases escasas.
 
 **Nota:** la pre-anotación sustituye todas las cajas de una tarea, así que el código protege la tarea si ya tiene cajas revisadas a mano.
 
