@@ -31,6 +31,9 @@ data/malaga/refresco/*/
 data/malaga/anotacion/*/images/
 data/malaga/anotacion/*/export/
 
+# Claves privadas (AEMET_API_KEY...): plantilla en .env.example
+.env
+
 # Servidor CVAT clonado y credenciales locales
 cvat/cvat-server/
 cvat/.env
