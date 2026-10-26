@@ -24,6 +24,9 @@ data/malaga/yolo26_dataset/
 # Salidas por fase del preprocesamiento (derivadas de raw/, se regeneran con 02_*)
 data/malaga/fases/
 
+# Zonas por cámara: se versiona zonas_camaras.json, no las copias de las imágenes de referencia
+data/malaga/zonas/imagenes/
+
 # Medición de refresco: se versionan los CSV, no las imágenes
 data/malaga/refresco/*/
 

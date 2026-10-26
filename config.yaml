@@ -91,6 +91,17 @@ cvat:
   n_imagenes_prioritario: 100
   max_por_camara_prioritario: 5
 
+estado_vehiculos:
+  # Distinguir coches aparcados de los que esperan al semáforo (06_estado_vehiculos):
+  # 1) zonas por cámara dibujadas en CVAT (zona_espera / zona_aparcamiento)
+  # 2) persistencia temporal: un vehículo inmóvil más de `tiempo_aparcado_s` está aparcado
+  camaras: [21547, 21541, 21560, 21563, 21545]
+  proyecto_zonas: "TFM Malaga - zonas de espera"
+  zonas: data/malaga/zonas/zonas_camaras.json
+  iou_mismo_vehiculo: 0.3      # solape mínimo para enlazar una caja con la del fotograma anterior
+  iou_inmovil: 0.7             # solape mínimo para considerar que el vehículo no se ha movido
+  max_hueco_s: 15              # se corta el seguimiento si dos imágenes distan más que esto
+  tiempo_aparcado_s: 300       # ~3 ciclos semafóricos completos inmóvil = aparcado
 
 entrenamiento:
   modelo: yolo26s.pt
