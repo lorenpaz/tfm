@@ -8,6 +8,9 @@ Cada notebook 02_* escribe SOLO su propia salida en data/malaga/fases/:
 
 Las fases se unen por (camera, image) con load_frames(), de modo que el orden de ejecución
 de weather y detection es indiferente y ninguna fase puede pisar el trabajo de otra.
+
+TFM - Máster en Inteligencia Artificial
+Autor: Lorenzo Jose de la Paz Suarez
 """
 
 from pathlib import Path
@@ -57,6 +60,20 @@ def load_frames(*extra_phases):
         overlap = (set(other.columns) & set(frames.columns)) - set(KEYS)
         frames = frames.merge(other.drop(columns=list(overlap)), on=KEYS, how="left")
     return frames
+
+
+def service_cameras():
+    """IDs (texto) de las 24 cámaras del servicio de captura continua (config.yaml -> captura.camaras)."""
+    return {str(c) for c in load_config()["captura"]["camaras"]}
+
+
+def only_service_cameras(df):
+    """Filtra a las cámaras del servicio de captura.
+
+    Las demás solo tienen 1-2 imágenes (instantáneas de 00_Descarga): sus indicadores no son
+    representativos y añadirían ruido a la evaluación y a los lotes de anotación.
+    """
+    return df[df["camera"].astype(str).isin(service_cameras())]
 
 
 def image_path(relative_path):

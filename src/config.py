@@ -1,4 +1,9 @@
-"""Carga de config.yaml, claves privadas (.env) y resolución de rutas del proyecto."""
+"""
+Carga de config.yaml, claves privadas (.env) y resolución de rutas del proyecto
+
+TFM - Máster en Inteligencia Artificial
+Autor: Lorenzo Jose de la Paz Suarez
+"""
 
 import os
 
@@ -12,8 +17,8 @@ ENV_FILE = PROJECT_ROOT / ".env"
 
 def get_secret(name, env_file=ENV_FILE):
     """Clave privada (p. ej. AEMET_API_KEY): variable de entorno o, si no existe, el fichero .env.
-
-    El .env de la raíz del proyecto está excluido de git (ver .env.example). Devuelve "" si no se encuentra.
+    El .env de la raíz del proyecto está excluido de git (ver .env.example).
+    Devuelve "" si no se encuentra.
     """
     if os.environ.get(name):
         return os.environ[name]

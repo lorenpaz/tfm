@@ -52,7 +52,7 @@ refresco:
 calidad:
   min_ancho: 640
   min_alto: 480
-  brillo_min_dia: 30          # solo se exige a imágenes de día (las nocturnas son oscuras por naturaleza)
+  brillo_min_dia: 30          # solo exigible a imágenes de día (las nocturnas son oscuras por naturaleza)
   brillo_max: 220
   percentil_nitidez_min: 5    # umbral de nitidez = percentil global de la varianza del Laplaciano
   max_fraccion_fallos: 0.30   # una cámara va a la lista negra si falla más de este % de sus imágenes de día
@@ -75,7 +75,6 @@ deteccion:
   modelo: yolo26s.pt
   conf: 0.25
   imgsz: 640
-  min_personas_grupo: 3
 
 cvat:
   version: v2.78.0
@@ -88,6 +87,7 @@ cvat:
 
 entrenamiento:
   modelo: yolo26s.pt
+  # hiperparametros
   epochs: 100
   patience: 20
   imgsz: 640

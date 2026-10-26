@@ -1,7 +1,8 @@
 """
 Utilidades para el etiquetado meteorológico con AEMET OpenData.
 
-Solo usa la librería estándar.
+TFM - Máster en Inteligencia Artificial
+Autor: Lorenzo Jose de la Paz Suarez
 """
 
 import math
