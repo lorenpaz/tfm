@@ -50,5 +50,9 @@ def path(key):
 
 
 def relative(p):
-    """Ruta relativa a la raíz del proyecto en formato POSIX (la que se guarda en las fases)."""
-    return Path(p).resolve().relative_to(PROJECT_ROOT).as_posix()
+    """Ruta relativa a la raíz del proyecto en formato POSIX (la que se guarda en las fases).
+
+    Usa abspath y no resolve(): raw/ es un enlace (junction) a una carpeta fuera de OneDrive,
+    y resolve() lo seguiría y sacaría la ruta fuera del proyecto.
+    """
+    return Path(os.path.abspath(p)).relative_to(PROJECT_ROOT).as_posix()

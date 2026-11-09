@@ -4,7 +4,7 @@ Los notebooks de esta carpeta implementan el pipeline completo del TFM, desde la
 - Código común en [`src/`](../src/README.md).
 - Parámetros de configuración en [`config.yaml`](../config.yaml).
 
-Todos los notebooks se ejecutan desde esta carpeta con el kernel **Python (TFM)** (`env_tfm`, el `.venv` del proyecto). La relación de cada notebook con los objetivos OE-1…OE-7 está en [`lineas-investigacion.md`](../lineas-investigacion.md#trazabilidad-entre-objetivos-y-notebooks).
+Todos los notebooks se ejecutan desde esta carpeta con el kernel **Python (TFM)** (`env_tfm`, el `.venv` del proyecto; es un *junction* a `C:\Users\loren\tfm-datos\.venv`, fuera de OneDrive). La relación de cada notebook con los objetivos OE-1…OE-7 está en [`lineas-investigacion.md`](../lineas-investigacion.md#trazabilidad-entre-objetivos-y-notebooks).
 
 ## Orden de ejecución y flujo de datos
 

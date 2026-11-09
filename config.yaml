@@ -45,6 +45,18 @@ captura:
   # (mismo Last-Modified); se registra como SIN_CAMBIOS
   descartar_sin_cambios: true
 
+retencion:
+  # Depuración de raw/ (scripts/depurar_raw.py, por defecto en modo simulación). Rejilla: de cada
+  # cámara se conserva 1 imagen por franja de `franja_min` minutos (la de más calidad), igual a
+  # cvat.separacion_minima_min: dos imágenes más próximas nunca pueden estar en el mismo lote.
+  franja_min: 10
+  dias_gracia: 7                     # las imágenes más recientes no se tocan
+  # Ventanas de evaluación [inicio, fin] (fechas locales, ambas incluidas): se conservan completas
+  # para los indicadores de 05 y las secuencias de 06. Formato: - ["AAAA-MM-DD", "AAAA-MM-DD"].
+  # La ventana inicial (2026-08-25 a 2026-10-26) se cerró el 2026-11-09: de ese periodo solo
+  # quedan la rejilla, los lotes, lo pendiente de 02 y las secuencias a 6 s pendientes de 06.
+  ventanas_evaluacion: []
+
 refresco:
   # utilizadas para medir el refresco
   camaras_referencia: [21547, 21541, 21560, 21563, 21545]
