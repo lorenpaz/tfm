@@ -10,7 +10,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 from config import load_config, path
 ```
 
-**Tests:** [`tests/`](../tests) cubre las funciones donde un error pasaría desapercibido: marcas de tiempo, conversión UTC en los cambios de hora, coordenadas de AEMET, reasignación de clases de CVAT y claves del `.env`. Se ejecutan con `.venv\Scripts\python.exe -m pytest tests` (31 tests, incluidos el seguimiento y la clasificación del estado de los vehículos y la separación mínima en la selección de lotes).
+**Tests:** [`tests/`](../tests) cubre las funciones donde un error pasaría desapercibido: marcas de tiempo, conversión UTC en los cambios de hora, coordenadas de AEMET, reasignación de clases de CVAT y claves del `.env`. Se ejecutan con `.venv\Scripts\python.exe -m pytest` (`pytest.ini` lo limita a `tests/`; 39 tests, incluidos el seguimiento y la clasificación del estado de los vehículos, la separación mínima en la selección de lotes y las reglas de retención de `raw/`).
 
 ## Dependencias entre módulos
 
@@ -19,7 +19,8 @@ config ◄── catalogo
        ◄── pipeline
 deteccion ◄── cvat_yolo26 ◄── cvat_lotes ──► anotacion, pipeline, config
 priorizacion (independiente: solo pandas/numpy)
-estado_vehiculos (independiente: solo librería estándar)
+estado_vehiculos ──► config, calidad, tiempo (secuencias a 6 s en raw/)
+retencion (independiente: solo pandas)
 tiempo, calidad, meteo, anotacion: independientes (tiempo, meteo y anotacion solo usan la librería estándar)
 ```
 
@@ -31,7 +32,7 @@ tiempo, calidad, meteo, anotacion: independientes (tiempo, meteo y anotacion sol
 |---|---|
 | `load_config()` | Lee `config.yaml` (una sola vez, con caché). |
 | `path(clave)` | Ruta absoluta de una entrada de `rutas` (p. ej. `path("raw")`). |
-| `relative(p)` | Ruta relativa a la raíz del proyecto, en formato POSIX. Es la que se guarda en las fases. |
+| `relative(p)` | Ruta relativa a la raíz del proyecto, en formato POSIX. Es la que se guarda en las fases. No sigue enlaces: `raw/` es un *junction* fuera de OneDrive. |
 | `get_secret(nombre)` | Clave privada: primero la variable de entorno y, si no existe, el fichero `.env` de la raíz (excluido de git; plantilla en `.env.example`). Se usa para `AEMET_API_KEY`. |
 
 **Decisión:** un único `config.yaml` para rutas, cámaras, umbrales, modelos y zona horaria, en lugar de constantes repetidas en cada notebook. Las claves privadas nunca van en `config.yaml` ni en el código.
@@ -174,6 +175,17 @@ tiempo, calidad, meteo, anotacion: independientes (tiempo, meteo y anotacion sol
 | `continuous_sequences(imagenes, max_hueco_s)` | Solo las imágenes de tramos continuos (vecina a ≤ `max_hueco_s`). La comparten `03c` (lote de validación) y `06`. |
 
 **Decisión:** en una sola imagen no se distingue un coche aparcado de uno que espera, así que se combinan **zonas fijas por cámara** y **persistencia temporal** con las capturas a 6 s, en lugar de una clase nueva del detector. El atributo `estado` de CVAT sirve para medir el acierto. Detalle y resultados en [`notebooks/README.md`](../notebooks/README.md#06_clasificacion_estado_vehiculos).
+
+## retencion.py — rejilla de entrenamiento y depuración de raw/
+
+| Función | Descripción |
+|---|---|
+| `grid_slot(timestamps, minutos)` | Inicio de la franja fija de `minutos` de cada marca de tiempo (UTC). |
+| `grid_representatives(imagenes, frames, minutos)` | Imagen que representa a cada cámara y franja: la de mayor `quality_score` entre las válidas o, si no hay ninguna, la primera. |
+| `in_windows(fechas, ventanas)` | Si cada fecha local cae en alguna ventana de evaluación `[inicio, fin]`. |
+| `classify_images(...)` | Motivo (`en_lote`, `reciente`, `pendiente_02`, `pendiente_06`, `ilegible`, `rejilla`, `ventana`, `redundante`) y acción (`conservar` / `borrar`) de cada imagen. |
+
+**Decisión:** la franja es igual a la separación mínima de los lotes (10 min), porque dos imágenes más próximas nunca pueden estar en el mismo lote. Lo usa `scripts/depurar_raw.py`; detalle y resultados en [`scripts/README.md`](../scripts/README.md#depurar_rawpy).
 
 ## main.py
 

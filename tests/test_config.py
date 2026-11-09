@@ -18,3 +18,25 @@ def test_environment_variable_takes_precedence(tmp_path, monkeypatch):
 def test_missing_secret_returns_empty(tmp_path, monkeypatch):
     monkeypatch.delenv("CLAVE_PRUEBA", raising=False)
     assert get_secret("CLAVE_PRUEBA", tmp_path / "no_existe.env") == ""
+
+
+def test_relative_does_not_follow_junctions(tmp_path, monkeypatch):
+    # raw/ es un junction a una carpeta fuera de OneDrive: la ruta guardada debe seguir siendo la del proyecto
+    import sys
+
+    import pytest
+
+    import config
+
+    if sys.platform != "win32":
+        pytest.skip("los junctions solo existen en Windows")
+    import _winapi
+
+    project, outside = tmp_path / "proyecto", tmp_path / "fuera"
+    (project / "data").mkdir(parents=True)
+    (outside / "21547").mkdir(parents=True)
+    _winapi.CreateJunction(str(outside), str(project / "data" / "raw"))
+    monkeypatch.setattr(config, "PROJECT_ROOT", project)
+    image = project / "data" / "raw" / "21547" / "20261026T120000Z.jpg"
+    image.write_bytes(b"jpg")
+    assert config.relative(image) == "data/raw/21547/20261026T120000Z.jpg"

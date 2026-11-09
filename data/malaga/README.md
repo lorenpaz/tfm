@@ -13,12 +13,14 @@ Esta carpeta contiene los datos del caso de estudio: el catálogo municipal de c
 | `da_camarasTrafico-4326.csv` | **Catálogo oficial** de las 134 cámaras de tráfico del Ayuntamiento de Málaga (datos abiertos). Columnas clave: `ID`, `NOMBRE`, `DIRECCION`, `SDOGEOMETRIA` (coordenadas `POINT (lon lat)`, EPSG:4326) y `URLIMAGEN` (imagen en tiempo real). Se lee siempre con `catalogo.load_catalog()`, que obtiene `lat`/`lon` y limpia las URL (algunas traen un tabulador final). |
 | `da_camarasTrafico-4326.geojson` | Mismo catálogo en formato GeoJSON, orientado a geometría espacial. |
 | `analisis_camaras_trafico_malaga.md` | Análisis manual de las cámaras **por distrito**: enlace, número de semáforos visibles y observaciones de visibilidad. Sirvió para elegir las 24 cámaras de la captura continua (`config.yaml` → `captura.camaras`) y las 5 de referencia para medir el refresco. |
+| `seleccion_camaras_y_captura.md` | **Informe de cámaras y captura:** situación de las cámaras y selección de las 24 del estudio, propuesta de captura (rejilla de entrenamiento y ventanas de evaluación) y condiciones de captura y guardado para un conjunto de entrenamiento de calidad. |
 | `calendario_festivos_malaga.csv` | Festivos de 2026 y 2027 (nacionales, autonómicos y locales de Málaga): `Fecha`, `Festividad`, `Ambito`. Se usa para el `day_type` (`festivo` / `fin_de_semana` / `laborable`). |
 
 ## Imágenes y captura
 
 ### `raw/`
-Imágenes capturadas, una carpeta por cámara: `raw/<ID_cámara>/<YYYYMMDDTHHMMSSZ>.jpg` (UTC, 640×480). Hay 134 carpetas:
+Imágenes capturadas, una carpeta por cámara: `raw/<ID_cámara>/<YYYYMMDDTHHMMSSZ>.jpg` (UTC, 640×480).
+Hay 134 carpetas:
 - Las 24 cámaras seleccionadas reciben capturas continuas del servicio `scripts/captura_camaras.py`: cada 30 s en hora punta y cada 60 s el resto del tiempo. Las **5 de referencia** (21541, 21545, 21547, 21560 y 21563) se capturan **cada 6 s en hora punta**, para poder medir duraciones de fase. No se guardan las capturas en las que la cámara aún no ha publicado imagen nueva.
 - Las demás solo tienen las instantáneas de `00a_captura_instantanea_catalogo`.
 
@@ -29,7 +31,7 @@ Imágenes capturadas, una carpeta por cámara: `raw/<ID_cámara>/<YYYYMMDDTHHMMS
 | `captura_imagenes.csv` | Resultado de la última instantánea de todas las cámaras (`00a_captura_instantanea_catalogo`). |
 
 ### `logs/`
-Logs del servicio de captura (NSSM): `capturas.log` (log propio, en UTC), `stdout.log` y `stderr.log` (salida y errores del proceso).
+Logs del servicio de captura (NSSM): `capturas.log` (log propio, en UTC), `stdout.log` y `stderr.log` (salida y errores del proceso). También los planes y registros de `scripts/depurar_raw.py`: `depuracion_<UTC>_simulacion.csv` y `depuracion_<UTC>_aplicado.csv`.
 
 ### `refresco/`
 Mediciones de la frecuencia real de refresco de las cámaras (`00b_medicion_refresco_camaras` / `scripts/medir_refresco.py`):

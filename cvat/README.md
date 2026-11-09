@@ -9,11 +9,11 @@
 
 ## Contenido de la carpeta
 
-| Fichero / carpeta | Versionado | Contenido |
-|---|---|---|
-| `cvat.ps1` | Sí | Script de gestión del servidor (ver abajo). |
-| `cvat-server/` | No | Repositorio oficial de CVAT, clonado en la etiqueta `v2.78.0`. Contiene el `docker-compose.yml` que levanta los contenedores. Lo crea `cvat.ps1 instalar`. |
-| `.env` | No | Credenciales generadas al instalar: `CVAT_URL`, `CVAT_USER`, `CVAT_EMAIL` y `CVAT_PASSWORD` (aleatoria, 20 caracteres). La lee `03a_anotacion_lote_estratificado`. |
+| Fichero / carpeta |Contenido |
+|---|---|
+| `cvat.ps1` | Script de gestión del servidor. |
+| `cvat-server/` | Repositorio oficial de CVAT, clonado en la etiqueta `v2.78.0`. Contiene el `docker-compose.yml` que levanta los contenedores. Lo crea `cvat.ps1 instalar`. |
+| `.env` | Credenciales generadas al instalar: `CVAT_URL`, `CVAT_USER`, `CVAT_EMAIL` y `CVAT_PASSWORD` (aleatoria, 20 caracteres). La lee `03a_anotacion_lote_estratificado`. |
 
 ## Ejecutable Windows PowerShell
 
@@ -28,13 +28,13 @@
 | `.\cvat\cvat.ps1 superusuario` | Crea el usuario `admin` con la contraseña de `.env`, y genera el `.env` si no existe. |
 | `.\cvat\cvat.ps1 logs` | Últimas 100 líneas del log de `cvat_server`. |
 
-**Decisiones del script:**
+**Decisiones:**
 - **Versión fijada** (`$CvatVersion = "v2.78.0"`) mediante `CVAT_VERSION`, para usar las imágenes publicadas de esa versión de forma explícita.
-- **Espera de hasta 15 minutos** a la API. El primer arranque aplica las migraciones de la base de datos y tarda más de 5 minutos; con la espera anterior, la instalación daba error aunque CVAT terminaba arrancando bien.
+- **Espera de hasta 15 minutos** a la API. El primer arranque aplica las migraciones de la base de datos y tarda más de 5 minutos.
 - **Credenciales fuera del código.** La contraseña se genera al azar, se guarda en `.env` (excluido de git) y se pasa al contenedor como variable de entorno.
 - Los comandos externos (`git`, `docker`) se ejecutan con una función que comprueba su código de salida.
 - El fichero está guardado en **UTF-8 con BOM**.
-- 
+
 ## Contenerización
 
 `docker compose` levanta unos 17 contenedores: el servidor (`cvat_server`), la interfaz (`cvat_ui`), la base de datos PostgreSQL (`cvat_db`), Redis, los *workers* de importación, exportación y anotación, `traefik` como proxy en el puerto 8080, y otros.
