@@ -29,7 +29,7 @@ Volumen estimado: **~3 GB/día** (imágenes de ~63 KB).
 **Ejecución:** como servicio de Windows **`CamarasMalaga`**, gestionado con NSSM: arranca con el sistema y se reinicia solo si falla.
 - Ejecutable: `.venv\Scripts\python.exe`
 - Argumento: `scripts\captura_camaras.py`
-- Directorio de trabajo: `scripts\`
+- Directorio de trabajo: la raíz del proyecto (`AppDirectory`)
 - Salida estándar y errores: `data\malaga\logs\stdout.log` y `stderr.log`. El log propio va a `capturas.log`.
 
 Para cambiar la ruta o el intérprete del servicio hacen falta permisos de administrador: `nssm set CamarasMalaga <parámetro> <valor>` y después `nssm restart CamarasMalaga`. Si se recrea el `.venv`, el servicio falla al arrancar hasta que vuelvan a estar instaladas las dependencias.
@@ -44,6 +44,8 @@ Para cambiar la ruta o el intérprete del servicio hacen falta permisos de admin
 - **Log compacto.** Los errores se registran siempre; las capturas, en una línea de resumen por minuto ("Último minuto: N capturas, M sin cambios, K errores"), porque a 6 s una línea por captura generaría ~30.000 líneas al día.
 - Reintentos con espera exponencial ante errores 429/5xx y cabeceras de navegador, porque sin ellas el servidor responde 403. Hay una sesión HTTP por hilo.
 - Las rutas se resuelven desde `config.yaml`, no de forma absoluta, para que el proyecto funcione en cualquier ubicación.
+- **El equipo no se suspende por inactividad mientras el servicio está en marcha** (`SetThreadExecutionState`), tampoco con batería. Con batería, Windows suspendía el portátil a los 15 minutos sin uso y después lo hibernaba: el 9/11/2026 la captura se cortó 14 horas. No evita la suspensión al cerrar la tapa, la manual ni la de batería crítica.
+- **Aviso de huecos.** Si entre dos vueltas del bucle pasan más de 2 minutos de reloj real, se registra un `WARNING` ("Captura reanudada tras N min sin ejecutarse"), para que los cortes queden en el log.
 
 Las imágenes se escriben en `data/malaga/raw/`, que es un *junction* a `C:\Users\loren\tfm-datos\raw`, fuera de OneDrive (ver [`data/malaga/README.md`](../data/malaga/README.md)). El servicio no necesita ningún cambio para usarlo.
 

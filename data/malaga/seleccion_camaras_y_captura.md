@@ -95,7 +95,7 @@ Situación a 26/10/2026. Este documento recoge la selección de cámaras, la pro
 
 **Volumen:** la captura genera unos 2,6 GB al día (medido el 17/10/2026) y quedan 40 GB libres en disco, unos 15 días de margen. Con la rejilla, fuera de las ventanas se conservarían unos 0,3 GB al día. La primera simulación (26/10/2026) liberaría 4,14 GB, el 44 % de `raw/`, al cerrar la ventana inicial. Se aplicó el 09/11/2026: se borraron 67.721 imágenes (4,14 GB).
 
-**Incidencia (6–9/11/2026).** Al mover el proyecto de `Escritorio\MASTER-UIMP\TFM` a `Escritorio\TFM`, el `.venv` quedó dañado y la captura se detuvo del 06/11 a las 18:40 UTC al 09/11 a las 11:22 UTC. Se reinstaló el entorno (PyTorch con CUDA) y se reconfiguró NSSM. Esos días son un hueco más en la cobertura.
+**Incidencia (6–9/11/2026).** Al mover el proyecto de `Escritorio\MASTER-UIMP\TFM` a `Escritorio\TFM`, el `.venv` quedó dañado y la captura se detuvo del 06/11 a las 18:40 UTC al 09/11 a las 11:22 UTC. Se reinstaló el entorno (PyTorch con CUDA) y se reconfiguró NSSM. Esos días son un hueco más en la cobertura. Hubo otro corte del 9/11 a las 17:01 UTC al 10/11 a las 06:59 UTC: el portátil se quedó con batería y Windows lo suspendió y después lo hibernó. Desde entonces el servicio impide la suspensión por inactividad mientras captura.
 
 ## 3. Condiciones y restricciones de la captura y el guardado
 

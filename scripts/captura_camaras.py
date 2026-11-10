@@ -16,6 +16,7 @@ Los nombres de fichero y metadatos se guardan en UTC (sufijo Z) para evitar ambi
 en los cambios de hora. La hora local solo se usa para decidir las horas punta.
 """
 
+import ctypes
 import logging
 import sys
 import threading
@@ -65,6 +66,10 @@ HIGH_FREQ_ONLY_PEAK = HIGH_FREQ.get("solo_hora_punta", True)
 DISCARD_UNCHANGED = CFG.get("descartar_sin_cambios", True)
 
 SUMMARY_EVERY_S = 60              # una línea de resumen por minuto en el log
+PAUSE_WARNING_S = 120             # una pausa mayor del bucle indica suspensión o hibernación
+
+# SetThreadExecutionState: ES_CONTINUOUS | ES_SYSTEM_REQUIRED
+KEEP_AWAKE_FLAGS = 0x80000000 | 0x00000001
 
 # =====================================================
 # LOGGING
@@ -292,9 +297,26 @@ def load_cameras():
 # BUCLE PRINCIPAL
 # =====================================================
 
+def keep_system_awake():
+    """Impide que Windows se suspenda por inactividad mientras el servicio está en marcha.
+
+    Con batería, el equipo se suspendía a los 15 min sin uso y la captura se cortaba durante
+    horas (9-10/11/2026). La petición dura mientras viva el hilo que la hace (el principal),
+    así que se libera sola al parar el servicio. No evita la suspensión al cerrar la tapa,
+    la manual ni la de batería crítica.
+    """
+    if sys.platform != "win32":
+        return
+    if ctypes.windll.kernel32.SetThreadExecutionState(KEEP_AWAKE_FLAGS):
+        logger.info("Suspensión por inactividad bloqueada mientras el servicio esté en marcha")
+    else:
+        logger.warning("No se pudo bloquear la suspensión por inactividad (SetThreadExecutionState)")
+
+
 def main():
 
     logger.info("Servicio iniciado")
+    keep_system_awake()
 
     cameras = {row["ID"]: row for _, row in load_cameras().iterrows()}
 
@@ -305,10 +327,19 @@ def main():
 
     summary = {"OK": 0, "SIN_CAMBIOS": 0, "ERROR": 0}
     last_summary = time.monotonic()
+    last_tick = time.time()
 
     with ThreadPoolExecutor(max_workers=12) as pool:
 
         while True:
+
+            # 0) Un salto grande del reloj de pared entre dos vueltas indica que el equipo
+            #    estuvo suspendido o hibernado: se deja constancia del hueco en el log.
+            paused_s = time.time() - last_tick
+            if paused_s > PAUSE_WARNING_S:
+                logger.warning(f"Captura reanudada tras {paused_s / 60:.0f} min sin ejecutarse "
+                               "(¿suspensión o hibernación del equipo?)")
+            last_tick = time.time()
 
             # 1) Recoger las descargas terminadas. Una descarga lenta (algunas tardan varios
             #    segundos) solo retrasa a su propia cámara, no a las demás.
